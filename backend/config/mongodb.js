@@ -1,0 +1,13 @@
+import mongoose from "mongoose";
+
+const connectDB = async () => {
+  try {
+    await mongoose.connect(`${process.env.MONGODB_URI}/OAuth-JWT`);
+    console.log("MongoDB connected successfully");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    process.exit();
+  }
+};
+
+export default connectDB;

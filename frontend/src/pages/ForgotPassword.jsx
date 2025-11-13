@@ -30,7 +30,7 @@ const ForgotPassword = () => {
             required
           />
           <button type="submit" className="btn-primary cursor-pointer mt-4">
-            Send Reset Link
+            Send Reset OTP
           </button>
         </form>
       </div>

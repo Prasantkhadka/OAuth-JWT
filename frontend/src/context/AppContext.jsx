@@ -12,7 +12,7 @@ export const AppContextProvider = (props) => {
 
   const getAuthState = async () => {
     try {
-      const res = await api.get("/auth/is-auth");
+      const res = await api.get("/auth/is-email-verified");
 
       if (res.data.success) {
         setIsLoggedIn(true);
@@ -25,7 +25,7 @@ export const AppContextProvider = (props) => {
 
   const getUserData = async () => {
     try {
-      const res = await api.get("/auth/me"); // cookie sent automatically
+      const res = await api.get("/user/profile"); // cookie sent automatically
       setUserData(res.data.user);
       setIsLoggedIn(true);
     } catch (err) {

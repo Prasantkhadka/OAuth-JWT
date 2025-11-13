@@ -11,7 +11,7 @@ const Navbar = () => {
 
   const sendVerificationEmail = async () => {
     try {
-      const res = await api.post("/auth/send-verification");
+      const res = await api.post("/auth/send-verification-otp");
       toast.success(res.data?.message || "Verification email sent");
     } catch (err) {
       console.error(err);
