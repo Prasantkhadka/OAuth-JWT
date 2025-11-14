@@ -1,16 +1,24 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import api from "../lib/api.js";
+import { useNavigate } from "react-router-dom";
 
 const ForgotPassword = () => {
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     try {
-      //backend call to send password reset link to the email
+      await api.post("/auth/send-reset-otp", { email });
+      toast.success("Password reset OTP sent (check your email)");
+      // redirect to verify OTP page with email in query
+      navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
     } catch (error) {
-      toast.error(error.message);
+      const msg =
+        error?.response?.data?.message || error?.message || "An error occurred";
+      toast.error(msg);
     }
   };
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
   return (
     <div className="auth-page">
       <div className="auth-card">

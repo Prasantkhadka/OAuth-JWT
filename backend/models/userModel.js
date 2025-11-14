@@ -16,6 +16,8 @@ const userSchema = new mongoose.Schema(
     isAccountVerified: { type: Boolean, default: false },
     resetOtp: { type: String, default: "" },
     resetOtpExpiry: { type: Number, default: 0 },
+    // store active refresh tokens for the user (token rotation / revoke)
+    refreshTokens: { type: [String], default: [] },
   },
   { timestamps: true }
 );

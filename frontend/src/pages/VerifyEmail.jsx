@@ -2,10 +2,11 @@ import React from "react";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext.jsx";
+import api from "../lib/api.js";
+import { toast } from "react-toastify";
 
 const VerifyEmail = () => {
-  const { isLoggedIn, setIsLoggedIn, userData, getUserData } =
-    useContext(AppContext);
+  const { getUserData } = useContext(AppContext);
 
   const inputRefs = React.useRef([]);
   const navigate = useNavigate();
@@ -35,7 +36,22 @@ const VerifyEmail = () => {
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-    // TODO: call your backend endpoint to verify the email with the code
+    try {
+      const code = inputRefs.current.map((el) => el.value || "").join("");
+      if (code.length !== 6) {
+        toast.error("Please enter the 6-digit code");
+        return;
+      }
+
+      await api.post("/auth/verify-email", { otp: code });
+      // refresh user info
+      await getUserData();
+      toast.success("Email verified");
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Verification failed");
+    }
   };
 
   return (

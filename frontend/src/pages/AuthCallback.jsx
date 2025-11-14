@@ -17,36 +17,32 @@ const AuthCallback = () => {
         if (error) {
           setStatus("Authentication failed");
           toast.error(`OAuth error: ${error}`);
+          navigate("/login");
           return;
         }
 
-        // Placeholder behavior:
-        // - In a real integration, the backend would exchange the code and set HttpOnly cookie(s).
-        // - Here we simulate finalization and set a mock user in context.
+        setStatus("Finalizing sign-in...");
 
-        setStatus("Finalizing sign-in (mock)...");
+        // Backend should have set an HttpOnly cookie. Request the profile endpoint to obtain user data.
+        const res = await api.get("/user/profile");
+        const user = res.data && res.data.user;
+        if (!user) {
+          setStatus("Authentication failed");
+          toast.error("Failed to fetch user after OAuth");
+          navigate("/login");
+          return;
+        }
 
-        // If backend sets HttpOnly cookies, the frontend could call /auth/me to fetch user after redirect:
-        // const res = await api.get('/auth/me');
-        // setUserData(res.data.user);
-        // setIsLoggedIn(true);
-
-        // Simulated success (mock)
-        setTimeout(() => {
-          setUserData({
-            name: "OAuth User",
-            email: "user@example.com",
-            isVerified: true,
-          });
-          setIsLoggedIn(true);
-          setStatus("Sign-in successful! Redirecting...");
-          toast.success("Signed in (mock)");
-          navigate("/", { replace: true });
-        }, 900);
+        setUserData(user);
+        setIsLoggedIn(true);
+        setStatus("Sign-in successful! Redirecting...");
+        toast.success("Signed in");
+        navigate("/", { replace: true });
       } catch (err) {
         console.error(err);
         setStatus("Authentication failed");
-        toast.error("Authentication failed");
+        toast.error(err?.response?.data?.message || "Authentication failed");
+        navigate("/login");
       }
     };
 

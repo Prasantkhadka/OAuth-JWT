@@ -13,6 +13,9 @@ const Navbar = () => {
     try {
       const res = await api.post("/auth/send-verification-otp");
       toast.success(res.data?.message || "Verification email sent");
+      // After requesting an OTP, send the user to the verify page so they
+      // can enter the code we just emailed them.
+      navigate("/verify-email");
     } catch (err) {
       console.error(err);
       toast.error(
@@ -42,18 +45,18 @@ const Navbar = () => {
       </div>
 
       {userData ? (
-        <div className="relative group">
-          <div className="w-8 h-8 flex justify-center items-center rounded-full text-white bg-transparent">
+        <div className="relative group inline-block">
+          <div className="w-8 h-8 flex justify-center items-center border-2 border-white rounded-full text-white bg-transparent cursor-pointer">
             {userData?.name?.[0]?.toUpperCase() ||
               userData?.email?.[0]?.toUpperCase() ||
               "U"}
           </div>
-          <div className="absolute hidden group-hover:block top-0 right-0 z-10 cursor-pointer">
-            <ul className="list-none m-0 p-2 text-sm">
+          <div className="absolute right-0 top-full mt-0 hidden group-hover:block z-50">
+            <ul className="list-none m-0 p-2 text-sm bg-white text-[#1b1835] rounded-md shadow-lg min-w-[160px] cursor-pointer">
               {!userData.isVerified && (
                 <li
                   onClick={sendVerificationEmail}
-                  className="py-1 px-2 hover:bg-light-700 cursor-pointer"
+                  className="block py-2 px-3 cursor-pointer rounded"
                 >
                   Verify Email
                 </li>
@@ -61,7 +64,7 @@ const Navbar = () => {
 
               <li
                 onClick={handleLogout}
-                className="py-1 px-2 hover:bg-light-700 cursor-pointer"
+                className="block py-2 px-3 cursor-pointer rounded"
               >
                 Logout
               </li>

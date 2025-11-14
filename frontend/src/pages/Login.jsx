@@ -1,12 +1,13 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext.jsx";
+import api from "../lib/api.js";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from "react-toastify";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { setIsLoggedIn, setUserData } = useContext(AppContext);
+  const { getUserData } = useContext(AppContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -17,13 +18,21 @@ const Login = () => {
       e.preventDefault();
 
       if (state === "Sign In") {
-        // TODO: call your backend endpoint to log in the user
+        await api.post("/auth/login", { email, password });
+        // backend sets HttpOnly cookie; fetch profile to populate client state
+        await getUserData();
+        navigate("/");
       } else {
-        // TODO: call your backend endpoint to sign up the user
+        await api.post("/auth/signup", { name, email, password });
+        await getUserData();
+        navigate("/");
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.message);
+      // Prefer backend-provided message when available (e.g. 409 conflict)
+      const msg =
+        error?.response?.data?.message || error?.message || "An error occurred";
+      toast.error(msg);
     }
   };
 
@@ -96,10 +105,15 @@ const Login = () => {
             </div>
           </form>
           <div className="divider">or continue with</div>
-          <button className="btn-secondary w-full cursor-pointer hover:shadow-lg">
+          <a
+            href={`${(
+              import.meta.env.VITE_API_URL || "http://localhost:4000"
+            ).replace(/\/$/, "")}/api/auth/google`}
+            className="btn-secondary w-full cursor-pointer hover:shadow-lg inline-flex items-center justify-center gap-2"
+          >
             <FcGoogle className="w-5 h-5" />
             Google
-          </button>
+          </a>
           <p className="text-center mt-4">
             {state === "Sign Up"
               ? "Already have an account? "
