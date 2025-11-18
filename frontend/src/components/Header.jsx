@@ -6,7 +6,7 @@ const Header = () => {
   return (
     <header>
       <h1>Welcome to MyApp</h1>
-      <h2>Hello {userData.name}</h2>
+      <h2>Hello {userData?.name || "Guest"}</h2>
     </header>
   );
 };
