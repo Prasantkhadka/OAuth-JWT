@@ -4,6 +4,17 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../lib/api.js";
 
+/**
+ * VerifyOtp component
+ *
+ * Role in flow:
+ * - Accepts a 6-digit OTP sent to the user's email (email passed via query).
+ * - Calls: POST /api/auth/verify-reset-otp with { email, otp }.
+ *   On success the server returns a short-lived `verificationToken` which the
+ *   frontend will include when navigating to the ResetPassword page.
+ * - This token-based step allows the password-reset endpoint to accept a
+ *   verificationToken instead of re-sending and validating OTPs.
+ */
 const VerifyOtp = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);

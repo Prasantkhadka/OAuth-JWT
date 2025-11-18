@@ -5,6 +5,19 @@ import api from "../lib/api.js";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from "react-toastify";
 
+/**
+ * Login component
+ *
+ * Role in flow:
+ * - Renders sign-in / sign-up UI.
+ * - Calls backend endpoints:
+ *    POST /api/auth/login  -> expects server to set HttpOnly cookies: `token` and `refreshToken`,
+ *                              and a readable `csrfToken` cookie for CSRF double-submit.
+ *    POST /api/auth/signup -> same behavior on successful registration.
+ * - After a successful response the component calls `getUserData()` (AppContext)
+ *   to fetch the authenticated user's profile using the access token cookie.
+ * - Frontend must use axios with `withCredentials: true` so cookies are sent/received.
+ */
 const Login = () => {
   const navigate = useNavigate();
   const { getUserData } = useContext(AppContext);

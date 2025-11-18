@@ -3,6 +3,20 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../lib/api.js";
 
+/**
+ * ResetPassword component
+ *
+ * Role in flow:
+ * - Final step of the password-reset flow. Two supported modes:
+ *   1) verificationToken in query (preferred): POST /api/auth/forgot-password
+ *      with { email, newPassword, verificationToken } — server validates the
+ *      short-lived JWT issued by `verify-reset-otp` and updates the password.
+ *   2) OTP fallback: POST /api/auth/forgot-password with { email, otp, newPassword }
+ *      — server validates the OTP stored on the user document.
+ * - On success the user is redirected to the login page.
+ * - Note: cookies are not required here because the reset flow is driven by
+ *   OTP or verification token supplied by the user.
+ */
 const ResetPassword = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);

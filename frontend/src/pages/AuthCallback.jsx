@@ -4,6 +4,17 @@ import { AppContext } from "../context/AppContext.jsx";
 import api from "../lib/api.js";
 import { toast } from "react-toastify";
 
+/**
+ * AuthCallback component
+ *
+ * Role in flow:
+ * - This page is the frontend landing place for OAuth providers (Google).
+ * - The server handles the OAuth redirect, exchanges the code, and sets
+ *   HttpOnly cookies (`token`, `refreshToken`). Google callback then
+ *   redirects the browser here (front-end) so the app can finalize sign-in.
+ * - This component calls GET /api/user/profile which relies on the server-set
+ *   `token` cookie. On success it updates AppContext and navigates to the app.
+ */
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();

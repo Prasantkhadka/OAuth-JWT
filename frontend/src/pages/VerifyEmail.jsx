@@ -5,6 +5,21 @@ import { AppContext } from "../context/AppContext.jsx";
 import api from "../lib/api.js";
 import { toast } from "react-toastify";
 
+/**
+ * VerifyEmail component
+ *
+ * Role in flow:
+ * - Protected: the user must be authenticated (access token cookie) and
+ *   `userAuth` middleware on the backend populates `req.user`.
+ * - Collects a 6-digit verification OTP that was emailed to the user.
+ * - Calls: POST /api/auth/verify-email with { otp }.
+ * - On success: backend marks the account verified; the component refreshes
+ *   user data (getUserData) and navigates to the app home.
+ *
+ * Notes:
+ * - The request uses `api` which sends cookies and the `X-CSRF-Token` header
+ *   (read from the `csrfToken` cookie) automatically.
+ */
 const VerifyEmail = () => {
   const { getUserData } = useContext(AppContext);
 

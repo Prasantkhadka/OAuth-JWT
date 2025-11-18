@@ -3,6 +3,17 @@ import { toast } from "react-toastify";
 import api from "../lib/api.js";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * ForgotPassword component
+ *
+ * Role in flow:
+ * - Collects a user's email and requests a password-reset OTP from the server.
+ * - Calls: POST /api/auth/send-reset-otp with { email }.
+ * - The server will send a one-time code to the email. On success the page
+ *   navigates to `/verify-otp?email=...` so the user can enter the OTP.
+ * - Cookies are not required for this unauthenticated step. Rate limiting
+ *   applies on the backend to prevent abuse.
+ */
 const ForgotPassword = () => {
   const onSubmitHandler = async (e) => {
     e.preventDefault();
