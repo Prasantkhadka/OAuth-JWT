@@ -31,6 +31,17 @@ app.get("/", (req, res) => {
   res.send("OAuth-JWT Backend is running");
 });
 
+// Debug helper: return cookies seen by the server for the incoming request.
+// Useful to verify whether the browser is sending cookies through the Vercel
+// proxy. Keep this endpoint simple and remove or restrict it in production.
+app.get("/api/debug/cookies", (req, res) => {
+  try {
+    return res.status(200).json({ cookies: req.cookies || {} });
+  } catch (err) {
+    return res.status(500).json({ error: "Unable to read cookies" });
+  }
+});
+
 // Api routes
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
