@@ -14,10 +14,9 @@ function getCookie(name) {
 // Axios instance configured to use HttpOnly cookies for token storage.
 // Backend should set HttpOnly cookies (access/refresh) and enable CORS with credentials.
 // Base URL should point at the backend root; routes are mounted under /api on the server.
-const base = (import.meta.env.VITE_API_URL || "http://localhost:4000").replace(
-  /\/$/,
-  ""
-);
+const base = (
+  import.meta.env.VITE_API_URL || "https://google-jwt-login.vercel.app"
+).replace(/\/$/, "");
 const api = axios.create({
   baseURL: `${base}/api`,
   withCredentials: true, // important for HttpOnly cookies
