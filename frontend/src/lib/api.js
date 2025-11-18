@@ -17,10 +17,12 @@ function getCookie(name) {
 // relative paths (/api/...) and Vercel forwards them to the backend. This
 // avoids cross-site cookie issues. If VITE_API_URL is set, it will be used
 // (useful for local dev or non-proxied setups).
-const configuredBackend = (import.meta.env.VITE_API_URL || "").replace(
-  /\/$/,
-  ""
-);
+// Prefer the relative proxy (/api) by default (works with Vercel rewrites).
+// Only use an external backend URL when VITE_USE_EXTERNAL_API === 'true'
+// to avoid unintentionally making cross-site requests which can block cookies.
+const envUrl = import.meta.env.VITE_API_URL || "";
+const useExternal = import.meta.env.VITE_USE_EXTERNAL_API === "true";
+const configuredBackend = useExternal ? envUrl.replace(/\/$/, "") : "";
 const apiBase = configuredBackend ? `${configuredBackend}/api` : "/api";
 const api = axios.create({
   baseURL: apiBase,
