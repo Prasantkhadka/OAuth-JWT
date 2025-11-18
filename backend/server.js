@@ -12,7 +12,15 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 connectDB();
 
-const allowedOrigins = process.env.FRONTEND_URL;
+// When running behind Vercel (or other proxies) enable trust proxy so that
+// secure cookies (Secure: true) and other proxy-aware settings work correctly.
+// This is important when Vercel routes traffic through its proxy layer.
+app.set("trust proxy", 1);
+
+// Allowed origin for CORS. Should be set in Vercel environment variables for
+// the backend project (FRONTEND_URL = https://o-auth-jwt.vercel.app).
+const allowedOrigins = process.env.FRONTEND_URL || "http://localhost:5174";
+console.log("CORS allowed origin:", allowedOrigins);
 
 app.use(express.json());
 app.use(cookieParser());
