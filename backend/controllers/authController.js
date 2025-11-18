@@ -17,34 +17,42 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5174";
 const accessTokenExpiry = process.env.ACCESS_TOKEN_EXPIRES || "15m"; // used for signing
 const refreshTokenExpiry = process.env.REFRESH_TOKEN_EXPIRES || "7d";
 
+// Decide when to force SameSite=None + Secure (keep this simple)
+const FORCE_SAMESITE_NONE = process.env.FORCE_SAMESITE_NONE === "true";
+const USE_SAMESITE_NONE =
+  FORCE_SAMESITE_NONE ||
+  process.env.NODE_ENV === "production" ||
+  (FRONTEND_URL &&
+    FRONTEND_URL.startsWith &&
+    FRONTEND_URL.startsWith("https://"));
+
 const accessCookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "None" : "strict",
-  // maxAge in ms; parse short/long defaults
+  secure: USE_SAMESITE_NONE,
+  sameSite: USE_SAMESITE_NONE ? "None" : "strict",
   maxAge: 15 * 60 * 1000, // 15 minutes
 };
 
 const refreshCookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
+  secure: USE_SAMESITE_NONE,
+  sameSite: USE_SAMESITE_NONE ? "None" : "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
 // CSRF cookie for double-submit protection (not httpOnly so client JS can read and send it)
 const csrfCookieOptions = {
   httpOnly: false,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
+  secure: USE_SAMESITE_NONE,
+  sameSite: USE_SAMESITE_NONE ? "None" : "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
 // Legacy OAuth cookie options (used only during Google OAuth redirect flow)
 const oauthCookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
+  secure: USE_SAMESITE_NONE,
+  sameSite: USE_SAMESITE_NONE ? "None" : "lax",
   maxAge: 24 * 60 * 60 * 1000,
 };
 
