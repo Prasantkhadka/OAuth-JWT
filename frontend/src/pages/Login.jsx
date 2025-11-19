@@ -5,19 +5,6 @@ import axios from "axios";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from "react-toastify";
 
-/**
- * Login component
- *
- * Role in flow:
- * - Renders sign-in / sign-up UI.
- * - Calls backend endpoints:
- *    POST /api/auth/login  -> expects server to set HttpOnly cookies: `token` and `refreshToken`,
- *                              and a readable `csrfToken` cookie for CSRF double-submit.
- *    POST /api/auth/signup -> same behavior on successful registration.
- * - After a successful response the component calls `getUserData()` (AppContext)
- *   to fetch the authenticated user's profile using the access token cookie.
- * - Frontend must use axios with `withCredentials: true` so cookies are sent/received.
- */
 const Login = () => {
   const navigate = useNavigate();
   const { getUserData } = useContext(AppContext);
@@ -32,7 +19,7 @@ const Login = () => {
 
       if (state === "Sign In") {
         await axios.post(
-          "/auth/login",
+          "/api/auth/login",
           { email, password },
           { withCredentials: true }
         );
@@ -41,7 +28,7 @@ const Login = () => {
         navigate("/");
       } else {
         await axios.post(
-          "/auth/signup",
+          "/api/auth/signup",
           { name, email, password },
           { withCredentials: true }
         );
@@ -49,13 +36,22 @@ const Login = () => {
         navigate("/");
       }
     } catch (error) {
-      console.log(error);
-      // Prefer backend-provided message when available (e.g. 409 conflict)
+      console.error(error);
       const msg =
         error?.response?.data?.message || error?.message || "An error occurred";
       toast.error(msg);
     }
   };
+
+  const googleHref = (() => {
+    if (import.meta.env.VITE_USE_EXTERNAL_API === "true") {
+      const backend = (
+        import.meta.env.VITE_API_URL || "http://localhost:4000"
+      ).replace(/\/$/, "");
+      return `${backend}/api/auth/google`;
+    }
+    return "/api/auth/google";
+  })();
 
   return (
     <div>
@@ -73,7 +69,7 @@ const Login = () => {
                     Name
                   </label>
                   <input
-                    className="input-field "
+                    className="input-field"
                     type="text"
                     id="name"
                     value={name}
@@ -82,12 +78,13 @@ const Login = () => {
                   />
                 </div>
               )}
+
               <div>
                 <label className="input-label px-2" htmlFor="email">
                   Email
                 </label>
                 <input
-                  className="input-field "
+                  className="input-field"
                   type="text"
                   id="email"
                   value={email}
@@ -95,12 +92,13 @@ const Login = () => {
                   required
                 />
               </div>
+
               <div>
                 <label className="input-label px-2" htmlFor="password">
                   Password
                 </label>
                 <input
-                  className="input-field "
+                  className="input-field"
                   type="password"
                   id="password"
                   value={password}
@@ -108,6 +106,7 @@ const Login = () => {
                   required
                 />
               </div>
+
               <p>
                 Forgot your password?{" "}
                 <span
@@ -117,6 +116,7 @@ const Login = () => {
                   Reset Password
                 </span>
               </p>
+
               <button
                 type="submit"
                 className="btn-primary w-full mt-4 cursor-pointer"
@@ -125,20 +125,17 @@ const Login = () => {
               </button>
             </div>
           </form>
+
           <div className="divider">or continue with</div>
+
           <a
-            href={
-              import.meta.env.VITE_USE_EXTERNAL_API === "true"
-                ? `${(
-                    import.meta.env.VITE_API_URL || "http://localhost:4000"
-                  ).replace(/\/$/, "")}/api/auth/google`
-                : "/api/auth/google"
-            }
+            href={googleHref}
             className="btn-secondary w-full cursor-pointer hover:shadow-lg inline-flex items-center justify-center gap-2"
           >
             <FcGoogle className="w-5 h-5" />
             Google
           </a>
+
           <p className="text-center mt-4">
             {state === "Sign Up"
               ? "Already have an account? "
