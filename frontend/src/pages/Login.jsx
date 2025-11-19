@@ -19,7 +19,7 @@ const Login = () => {
 
       if (state === "Sign In") {
         await axios.post(
-          "/api/auth/login",
+          "/auth/login",
           { email, password },
           { withCredentials: true }
         );
@@ -28,7 +28,7 @@ const Login = () => {
         navigate("/");
       } else {
         await axios.post(
-          "/api/auth/signup",
+          "/auth/signup",
           { name, email, password },
           { withCredentials: true }
         );
