@@ -1,78 +1,52 @@
-import React, { useEffect, useContext, useState } from "react";
+import React, { useEffect, useContext } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppContext } from "../context/AppContext.jsx";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-/**
- * AuthCallback component
- *
- * Role in flow:
- * - This page is the frontend landing place for OAuth providers (Google).
- * - The server handles the OAuth redirect, exchanges the code, and sets
- *   HttpOnly cookies (`token`, `refreshToken`). Google callback then
- *   redirects the browser here (front-end) so the app can finalize sign-in.
- * - This component calls GET /api/user/profile which relies on the server-set
- *   `token` cookie. On success it updates AppContext and navigates to the app.
- */
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { setIsLoggedIn, setUserData } = useContext(AppContext);
-  const [status, setStatus] = useState("Processing authentication...");
 
   useEffect(() => {
-    const handleCallback = async () => {
+    (async () => {
+      // If the backend redirected here with an error query, bail out
+      const err = searchParams.get("error");
+      if (err) {
+        toast.error(`OAuth error: ${err}`);
+        navigate("/login");
+        return;
+      }
+
       try {
-        const error = searchParams.get("error");
-        if (error) {
-          setStatus("Authentication failed");
-          toast.error(`OAuth error: ${error}`);
-          navigate("/login");
-          return;
-        }
-
-        setStatus("Finalizing sign-in...");
-
-        // Backend should have set an HttpOnly cookie. Request the profile endpoint to obtain user data.
-        // Use the full backend URL here because the OAuth flow sets cookies on the
-        // backend host (not the frontend). Calling the backend origin ensures the
-        // browser sends the HttpOnly cookie stored for that domain.
-        const backend = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
-        const profileUrl = backend
-          ? `${backend}/api/user/profile`
-          : "/api/user/profile";
-        const res = await axios.get(profileUrl, { withCredentials: true });
-        const user = res.data && res.data.user;
-        if (!user) {
-          setStatus("Authentication failed");
-          toast.error("Failed to fetch user after OAuth");
-          navigate("/login");
-          return;
-        }
+        // Ask the backend for the profile. axios.defaults.baseURL is set
+        // in AppContext; this will call `/api/user/profile` (via proxy)
+        // or the configured backend depending on env.
+        const res = await axios.get("/user/profile", { withCredentials: true });
+        const user = res?.data?.user;
+        if (!user) throw new Error("No user data");
 
         setUserData(user);
         setIsLoggedIn(true);
-        setStatus("Sign-in successful! Redirecting...");
-        toast.success("Signed in");
         navigate("/", { replace: true });
-      } catch (err) {
-        console.error(err);
-        setStatus("Authentication failed");
-        toast.error(err?.response?.data?.message || "Authentication failed");
+      } catch (e) {
+        console.error("Auth callback failed:", e);
+        toast.error(e?.response?.data?.message || "Authentication failed");
         navigate("/login");
       }
-    };
-
-    handleCallback();
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Minimal UI while redirecting
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h2 className="auth-title">OAuth callback</h2>
-        <p className="text-light-200">{status}</p>
+        <h2 className="auth-title">Finalizing sign-in...</h2>
+        <p className="text-light-200">
+          Please wait — finishing authentication.
+        </p>
       </div>
     </div>
   );

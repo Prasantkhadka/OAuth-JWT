@@ -14,23 +14,14 @@ const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5174";
 
 // Access / refresh token cookie options (simple and consistent)
-const accessTokenExpiry = process.env.ACCESS_TOKEN_EXPIRES || "15m"; // used for signing
-const refreshTokenExpiry = process.env.REFRESH_TOKEN_EXPIRES || "7d";
-
-// Build cookie options. If you need cross-subdomain cookies on Vercel set
-// COOKIE_DOMAIN to ".vercel.app" in the backend environment. Note: some
-// public suffixes may prevent setting cookies for the entire suffix.
-const cookieDomain = process.env.COOKIE_DOMAIN || null;
+const accessTokenExpiry = "15m"; // used for signing
+const refreshTokenExpiry = "7d";
 
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  // use canonical 'None' when enabling cross-site cookies in production
-  sameSite: process.env.NODE_ENV === "production" ? "None" : "Strict",
+  secure: true,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 };
-
-// include domain when explicitly provided
-if (cookieDomain) cookieOptions.domain = cookieDomain;
 
 const accessCookieOptions = {
   ...cookieOptions,
@@ -44,7 +35,8 @@ const refreshCookieOptions = {
 
 // CSRF cookie for double-submit protection (not httpOnly so client JS can read and send it)
 const csrfCookieOptions = {
-  ...cookieOptions,
+  secure: true,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   httpOnly: false,
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
