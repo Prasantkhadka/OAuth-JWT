@@ -47,6 +47,14 @@ const oauthCookieOptions = {
   maxAge: 24 * 60 * 60 * 1000,
 };
 
+// Short-lived readable cookie options for OAuth state validation (5 minutes).
+// Inherit sameSite/secure behavior from csrfCookieOptions so production
+// environments use SameSite=None + Secure when appropriate.
+const oauthStateCookieOptions = {
+  ...csrfCookieOptions,
+  maxAge: 5 * 60 * 1000,
+};
+
 /* Utility helpers to generate and protect tokens
    - generateAccessToken(userId): returns a short-lived JWT used for API access.
      This token is intended to be stored as an HttpOnly cookie named `token`.
@@ -637,24 +645,8 @@ function genState(len = 24) {
  */
 export const googleAuthRedirect = (req, res) => {
   const state = genState(24);
-  // store state in cookie for validation on callback (short-lived)
-  res.cookie("oauth_state", state, {
-    maxAge: 5 * 60 * 1000,
-    httpOnly: false,
-    sameSite: "lax",
-  });
-
-  // Dev-only debug: log the state and Set-Cookie header so we can inspect
-  // how the cookie is being delivered through the proxy.
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      console.log("[debug] googleAuthRedirect set oauth_state=", state);
-      const sc = res.getHeader && res.getHeader("Set-Cookie");
-      console.log("[debug] googleAuthRedirect Set-Cookie:", sc);
-    } catch (e) {
-      console.error("[debug] error logging Set-Cookie:", e);
-    }
-  }
+  // store state in a short-lived readable cookie for validation on callback
+  res.cookie("oauth_state", state, oauthStateCookieOptions);
 
   const url = oauth2Client.generateAuthUrl({
     access_type: "offline", // request refresh_token
@@ -681,17 +673,6 @@ export const googleAuthCallback = async (req, res) => {
   try {
     const { code, state } = req.query;
     const savedState = req.cookies && req.cookies.oauth_state;
-
-    // Dev-only debug: log incoming cookies and state values to help trace
-    if (process.env.NODE_ENV !== "production") {
-      try {
-        console.log("[debug] googleAuthCallback query.state=", state);
-        console.log("[debug] googleAuthCallback savedState (from req.cookies)=", savedState);
-        console.log("[debug] googleAuthCallback req.cookies=", req.cookies || {});
-      } catch (e) {
-        console.error("[debug] error logging callback debug info:", e);
-      }
-    }
 
     if (!code) {
       return res.status(400).send("Missing code");
@@ -757,7 +738,7 @@ export const googleAuthCallback = async (req, res) => {
     res.cookie("refreshToken", refreshToken, refreshCookieOptions);
 
     // clear the oauth_state cookie
-    res.clearCookie("oauth_state");
+    res.clearCookie("oauth_state", oauthStateCookieOptions);
 
     // Redirect user to frontend callback route which finalizes the flow
     return res.redirect(`${FRONTEND_URL.replace(/\/$/, "")}/auth/callback`);
