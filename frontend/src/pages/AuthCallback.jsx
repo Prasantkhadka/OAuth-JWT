@@ -35,7 +35,14 @@ const AuthCallback = () => {
         setStatus("Finalizing sign-in...");
 
         // Backend should have set an HttpOnly cookie. Request the profile endpoint to obtain user data.
-        const res = await axios.get("/user/profile", { withCredentials: true });
+        // Use the full backend URL here because the OAuth flow sets cookies on the
+        // backend host (not the frontend). Calling the backend origin ensures the
+        // browser sends the HttpOnly cookie stored for that domain.
+        const backend = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+        const profileUrl = backend
+          ? `${backend}/api/user/profile`
+          : "/api/user/profile";
+        const res = await axios.get(profileUrl, { withCredentials: true });
         const user = res.data && res.data.user;
         if (!user) {
           setStatus("Authentication failed");
