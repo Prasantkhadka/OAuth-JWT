@@ -127,9 +127,13 @@ const Login = () => {
           </form>
           <div className="divider">or continue with</div>
           <a
-            href={`${(
-              import.meta.env.VITE_API_URL || "http://localhost:4000"
-            ).replace(/\/$/, "")}/api/auth/google`}
+            href={
+              import.meta.env.VITE_USE_EXTERNAL_API === "true"
+                ? `${(
+                    import.meta.env.VITE_API_URL || "http://localhost:4000"
+                  ).replace(/\/$/, "")}/api/auth/google`
+                : "/api/auth/google"
+            }
             className="btn-secondary w-full cursor-pointer hover:shadow-lg inline-flex items-center justify-center gap-2"
           >
             <FcGoogle className="w-5 h-5" />

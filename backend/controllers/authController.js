@@ -17,11 +17,20 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5174";
 const accessTokenExpiry = process.env.ACCESS_TOKEN_EXPIRES || "15m"; // used for signing
 const refreshTokenExpiry = process.env.REFRESH_TOKEN_EXPIRES || "7d";
 
+// Build cookie options. If you need cross-subdomain cookies on Vercel set
+// COOKIE_DOMAIN to ".vercel.app" in the backend environment. Note: some
+// public suffixes may prevent setting cookies for the entire suffix.
+const cookieDomain = process.env.COOKIE_DOMAIN || null;
+
 const cookieOptions = {
-  httpOnly: true, // Prevent client-side JS from accessing the cookie
-  secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict", // controls whether cookies are sent with cross-site requests
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  // use canonical 'None' when enabling cross-site cookies in production
+  sameSite: process.env.NODE_ENV === "production" ? "None" : "Strict",
 };
+
+// include domain when explicitly provided
+if (cookieDomain) cookieOptions.domain = cookieDomain;
 
 const accessCookieOptions = {
   ...cookieOptions,
