@@ -4,7 +4,7 @@ import { AppContext } from "../context/AppContext.jsx";
 const Header = () => {
   const { userData } = useContext(AppContext);
   return (
-    <header>
+    <header className="flex flex-row items-center justify-between p-4">
       <h1>Welcome to MyApp</h1>
       <h2>Hello {userData?.name || "Guest"}</h2>
     </header>
