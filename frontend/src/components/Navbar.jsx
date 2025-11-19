@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { AppContext } from "../context/AppContext.jsx";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import api from "../lib/api.js";
+import axios from "axios";
 import { toast } from "react-toastify";
 
 const Navbar = () => {
@@ -11,7 +11,7 @@ const Navbar = () => {
 
   const sendVerificationEmail = async () => {
     try {
-      const res = await api.post("/auth/send-verification-otp");
+      const res = await axios.post("/auth/send-verification-otp");
       toast.success(res.data?.message || "Verification email sent");
       // After requesting an OTP, send the user to the verify page so they
       // can enter the code we just emailed them.
@@ -26,7 +26,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      await api.post("/auth/logout");
+      await axios.post("/auth/logout");
       // clear client state
       setUserData(null);
       setIsLoggedIn(false);

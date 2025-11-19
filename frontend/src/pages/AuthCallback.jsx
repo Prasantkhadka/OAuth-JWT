@@ -1,7 +1,7 @@
 import React, { useEffect, useContext, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppContext } from "../context/AppContext.jsx";
-import api from "../lib/api.js";
+import axios from "axios";
 import { toast } from "react-toastify";
 
 /**
@@ -35,7 +35,7 @@ const AuthCallback = () => {
         setStatus("Finalizing sign-in...");
 
         // Backend should have set an HttpOnly cookie. Request the profile endpoint to obtain user data.
-        const res = await api.get("/user/profile");
+        const res = await axios.get("/user/profile");
         const user = res.data && res.data.user;
         if (!user) {
           setStatus("Authentication failed");

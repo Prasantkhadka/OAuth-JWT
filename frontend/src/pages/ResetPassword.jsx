@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import api from "../lib/api.js";
+import axios from "axios";
 
 /**
  * ResetPassword component
@@ -71,7 +71,7 @@ const ResetPassword = () => {
         if (newPassword !== confirmPassword)
           return toast.error("Password and confirm password do not match");
 
-        await api.post("/auth/forgot-password", {
+        await axios.post("/auth/forgot-password", {
           email,
           newPassword,
           verificationToken: tokenFromQuery,
@@ -93,7 +93,7 @@ const ResetPassword = () => {
       if (newPassword !== confirmPassword)
         return toast.error("Password and confirm password do not match");
 
-      await api.post("/auth/forgot-password", {
+      await axios.post("/auth/forgot-password", {
         email,
         otp: code,
         newPassword,

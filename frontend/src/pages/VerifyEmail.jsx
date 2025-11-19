@@ -2,7 +2,7 @@ import React from "react";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext.jsx";
-import api from "../lib/api.js";
+import axios from "axios";
 import { toast } from "react-toastify";
 
 /**
@@ -58,7 +58,7 @@ const VerifyEmail = () => {
         return;
       }
 
-      await api.post("/auth/verify-email", { otp: code });
+      await axios.post("/auth/verify-email", { otp: code });
       // refresh user info
       await getUserData();
       toast.success("Email verified");

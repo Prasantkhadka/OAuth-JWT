@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext.jsx";
-import api from "../lib/api.js";
+import axios from "axios";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from "react-toastify";
 
@@ -31,12 +31,12 @@ const Login = () => {
       e.preventDefault();
 
       if (state === "Sign In") {
-        await api.post("/auth/login", { email, password });
+        await axios.post("/auth/login", { email, password });
         // backend sets HttpOnly cookie; fetch profile to populate client state
         await getUserData();
         navigate("/");
       } else {
-        await api.post("/auth/signup", { name, email, password });
+        await axios.post("/auth/signup", { name, email, password });
         await getUserData();
         navigate("/");
       }

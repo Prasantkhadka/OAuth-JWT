@@ -2,7 +2,7 @@ import React from "react";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import api from "../lib/api.js";
+import axios from "axios";
 
 /**
  * VerifyOtp component
@@ -57,7 +57,7 @@ const VerifyOtp = () => {
       if (!email) return toast.error("Please provide your email");
       if (otp.length !== 6) return toast.error("Please enter the 6-digit OTP");
 
-      const res = await api.post("/auth/verify-reset-otp", { email, otp });
+      const res = await axios.post("/auth/verify-reset-otp", { email, otp });
       const token = res.data?.verificationToken;
       if (!token) return toast.error("Verification failed");
       toast.success("OTP verified. Please choose a new password.");

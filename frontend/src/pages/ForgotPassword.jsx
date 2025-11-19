@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import api from "../lib/api.js";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 /**
@@ -18,7 +18,7 @@ const ForgotPassword = () => {
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/auth/send-reset-otp", { email });
+      await axios.post("/auth/send-reset-otp", { email });
       toast.success("Password reset OTP sent (check your email)");
       // redirect to verify OTP page with email in query
       navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
