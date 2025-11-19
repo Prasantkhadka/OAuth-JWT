@@ -2,6 +2,9 @@ import User from "../models/userModel.js";
 
 export const getUserProfile = async (req, res) => {
   try {
+    // Dev-only: log cookies the server received to help debug cross-site cookie issues
+    if (process.env.NODE_ENV !== "production")
+      console.log("[debug] req.cookies:", req.cookies || {});
     const userId = req.user.id;
 
     const user = await User.findById(userId).select(

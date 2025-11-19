@@ -13,46 +13,36 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5174";
 
-// Access / refresh token cookie options
+// Access / refresh token cookie options (simple and consistent)
 const accessTokenExpiry = process.env.ACCESS_TOKEN_EXPIRES || "15m"; // used for signing
 const refreshTokenExpiry = process.env.REFRESH_TOKEN_EXPIRES || "7d";
 
-// Decide when to force SameSite=None + Secure (keep this simple)
-const FORCE_SAMESITE_NONE = process.env.FORCE_SAMESITE_NONE === "true";
-const USE_SAMESITE_NONE =
-  FORCE_SAMESITE_NONE ||
-  process.env.NODE_ENV === "production" ||
-  (FRONTEND_URL &&
-    FRONTEND_URL.startsWith &&
-    FRONTEND_URL.startsWith("https://"));
+const cookieOptions = {
+  httpOnly: true, // Prevent client-side JS from accessing the cookie
+  secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict", // controls whether cookies are sent with cross-site requests
+};
 
 const accessCookieOptions = {
-  httpOnly: true,
-  secure: USE_SAMESITE_NONE,
-  sameSite: USE_SAMESITE_NONE ? "None" : "strict",
+  ...cookieOptions,
   maxAge: 15 * 60 * 1000, // 15 minutes
 };
 
 const refreshCookieOptions = {
-  httpOnly: true,
-  secure: USE_SAMESITE_NONE,
-  sameSite: USE_SAMESITE_NONE ? "None" : "lax",
+  ...cookieOptions,
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
 // CSRF cookie for double-submit protection (not httpOnly so client JS can read and send it)
 const csrfCookieOptions = {
+  ...cookieOptions,
   httpOnly: false,
-  secure: USE_SAMESITE_NONE,
-  sameSite: USE_SAMESITE_NONE ? "None" : "lax",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
-// Legacy OAuth cookie options (used only during Google OAuth redirect flow)
+// OAuth-specific cookie options
 const oauthCookieOptions = {
-  httpOnly: true,
-  secure: USE_SAMESITE_NONE,
-  sameSite: USE_SAMESITE_NONE ? "None" : "lax",
+  ...cookieOptions,
   maxAge: 24 * 60 * 60 * 1000,
 };
 
