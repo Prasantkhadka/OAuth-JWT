@@ -24,11 +24,8 @@ const AuthCallback = () => {
         // that backend host. In that case request the profile from the
         // backend origin so the browser will include the HttpOnly `token`
         // cookie that the backend set during the OAuth callback.
-        const backend = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
-        const profileUrl = backend
-          ? `${backend}/api/user/profile`
-          : "/api/user/profile";
-        const res = await axios.get(profileUrl, { withCredentials: true });
+        // We rely on the proxy; remove unused backend/profileUrl logic.
+        const res = await axios.get("/user/profile", { withCredentials: true });
         const user = res?.data?.user;
         if (!user) throw new Error("No user data");
 

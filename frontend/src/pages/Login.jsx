@@ -43,13 +43,10 @@ const Login = () => {
     }
   };
 
-  // Prefer a configured backend URL so the oauth_state cookie is set on the
-  // backend domain (ensuring Google's redirect back to backend includes it).
-  // Fall back to the proxy path for local dev when no backend URL is provided.
-  const googleHref = (() => {
-    const backend = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
-    return backend ? `${backend}/api/auth/google` : "/api/auth/google";
-  })();
+  // Always use the frontend proxy path so Vercel rewrites deliver the
+  // request to the backend and Set-Cookie headers are scoped to the
+  // frontend origin (recommended on Vercel).
+  const googleHref = "/api/auth/google";
 
   return (
     <div>
