@@ -43,14 +43,12 @@ const Login = () => {
     }
   };
 
+  // Prefer a configured backend URL so the oauth_state cookie is set on the
+  // backend domain (ensuring Google's redirect back to backend includes it).
+  // Fall back to the proxy path for local dev when no backend URL is provided.
   const googleHref = (() => {
-    if (import.meta.env.VITE_USE_EXTERNAL_API === "true") {
-      const backend = (
-        import.meta.env.VITE_API_URL || "http://localhost:4000"
-      ).replace(/\/$/, "");
-      return `${backend}/api/auth/google`;
-    }
-    return "/api/auth/google";
+    const backend = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+    return backend ? `${backend}/api/auth/google` : "/api/auth/google";
   })();
 
   return (
