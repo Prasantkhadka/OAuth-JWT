@@ -20,10 +20,15 @@ const AuthCallback = () => {
       }
 
       try {
-        // Ask the backend for the profile. axios.defaults.baseURL is set
-        // in AppContext; this will call `/api/user/profile` (via proxy)
-        // or the configured backend depending on env.
-        const res = await axios.get("/user/profile", { withCredentials: true });
+        // If a backend URL is configured we likely initiated OAuth against
+        // that backend host. In that case request the profile from the
+        // backend origin so the browser will include the HttpOnly `token`
+        // cookie that the backend set during the OAuth callback.
+        const backend = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+        const profileUrl = backend
+          ? `${backend}/api/user/profile`
+          : "/api/user/profile";
+        const res = await axios.get(profileUrl, { withCredentials: true });
         const user = res?.data?.user;
         if (!user) throw new Error("No user data");
 
