@@ -11,7 +11,9 @@ const Navbar = () => {
 
   const sendVerificationEmail = async () => {
     try {
-      const res = await axios.post("/auth/send-verification-otp");
+      const res = await axios.post("/auth/send-verification-otp", null, {
+        withCredentials: true,
+      });
       toast.success(res.data?.message || "Verification email sent");
       // After requesting an OTP, send the user to the verify page so they
       // can enter the code we just emailed them.
@@ -26,7 +28,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("/auth/logout");
+      await axios.post("/auth/logout", null, { withCredentials: true });
       // clear client state
       setUserData(null);
       setIsLoggedIn(false);

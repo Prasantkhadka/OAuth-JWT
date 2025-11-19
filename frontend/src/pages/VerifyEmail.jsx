@@ -58,7 +58,11 @@ const VerifyEmail = () => {
         return;
       }
 
-      await axios.post("/auth/verify-email", { otp: code });
+      await axios.post(
+        "/auth/verify-email",
+        { otp: code },
+        { withCredentials: true }
+      );
       // refresh user info
       await getUserData();
       toast.success("Email verified");

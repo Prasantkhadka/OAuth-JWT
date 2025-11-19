@@ -35,7 +35,7 @@ const AuthCallback = () => {
         setStatus("Finalizing sign-in...");
 
         // Backend should have set an HttpOnly cookie. Request the profile endpoint to obtain user data.
-        const res = await axios.get("/user/profile");
+        const res = await axios.get("/user/profile", { withCredentials: true });
         const user = res.data && res.data.user;
         if (!user) {
           setStatus("Authentication failed");

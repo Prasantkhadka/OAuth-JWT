@@ -41,7 +41,7 @@ export const AppContextProvider = (props) => {
 
   const getUserData = async () => {
     try {
-      const res = await axios.get("/user/profile"); // cookie sent automatically
+      const res = await axios.get("/user/profile", { withCredentials: true }); // ensure cookies are sent
       setUserData(res.data.user);
       setIsLoggedIn(true);
     } catch (err) {

@@ -31,12 +31,20 @@ const Login = () => {
       e.preventDefault();
 
       if (state === "Sign In") {
-        await axios.post("/auth/login", { email, password });
+        await axios.post(
+          "/auth/login",
+          { email, password },
+          { withCredentials: true }
+        );
         // backend sets HttpOnly cookie; fetch profile to populate client state
         await getUserData();
         navigate("/");
       } else {
-        await axios.post("/auth/signup", { name, email, password });
+        await axios.post(
+          "/auth/signup",
+          { name, email, password },
+          { withCredentials: true }
+        );
         await getUserData();
         navigate("/");
       }
