@@ -644,6 +644,18 @@ export const googleAuthRedirect = (req, res) => {
     sameSite: "lax",
   });
 
+  // Dev-only debug: log the state and Set-Cookie header so we can inspect
+  // how the cookie is being delivered through the proxy.
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      console.log("[debug] googleAuthRedirect set oauth_state=", state);
+      const sc = res.getHeader && res.getHeader("Set-Cookie");
+      console.log("[debug] googleAuthRedirect Set-Cookie:", sc);
+    } catch (e) {
+      console.error("[debug] error logging Set-Cookie:", e);
+    }
+  }
+
   const url = oauth2Client.generateAuthUrl({
     access_type: "offline", // request refresh_token
     scope: ["openid", "profile", "email"],
@@ -669,6 +681,17 @@ export const googleAuthCallback = async (req, res) => {
   try {
     const { code, state } = req.query;
     const savedState = req.cookies && req.cookies.oauth_state;
+
+    // Dev-only debug: log incoming cookies and state values to help trace
+    if (process.env.NODE_ENV !== "production") {
+      try {
+        console.log("[debug] googleAuthCallback query.state=", state);
+        console.log("[debug] googleAuthCallback savedState (from req.cookies)=", savedState);
+        console.log("[debug] googleAuthCallback req.cookies=", req.cookies || {});
+      } catch (e) {
+        console.error("[debug] error logging callback debug info:", e);
+      }
+    }
 
     if (!code) {
       return res.status(400).send("Missing code");

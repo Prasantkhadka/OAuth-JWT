@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { setIsLoggedIn, setUserData } = useContext(AppContext);
+  const { setIsLoggedIn, setUserData, getUserData } = useContext(AppContext);
 
   useEffect(() => {
     (async () => {
@@ -26,6 +26,15 @@ const AuthCallback = () => {
         // cookie that the backend set during the OAuth callback.
         // We rely on the proxy; remove unused backend/profileUrl logic.
         const res = await axios.get("/user/profile", { withCredentials: true });
+        // Server may return 304 Not Modified (no body) when ETag matches.
+        // In that case rely on getUserData() to populate client state via the
+        // proxy. Otherwise read user from the response body.
+        if (res.status === 304) {
+          await getUserData();
+          navigate("/", { replace: true });
+          return;
+        }
+
         const user = res?.data?.user;
         if (!user) throw new Error("No user data");
 
