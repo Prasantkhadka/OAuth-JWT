@@ -13,9 +13,9 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5174";
 
-// Access / refresh token cookie options (simple and consistent)
+// Access / refresh token cookie options
 const accessTokenExpiry = "15m"; // used for signing
-const refreshTokenExpiry = "7d";
+const refreshTokenExpiry = "7d"; // used for signing
 
 const cookieOptions = {
   httpOnly: true,
@@ -23,17 +23,24 @@ const cookieOptions = {
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 };
 
+// Sent automatically with every request because it's inside an HttpOnly cookie. Protects against XSS attacks.
+// XSS (Cross-Site Scripting) attacks are a type of security vulnerability where attackers inject malicious client-side scripts,
+// often JavaScript, into trusted websites that other users visit.
 const accessCookieOptions = {
   ...cookieOptions,
   maxAge: 15 * 60 * 1000, // 15 minutes
 };
 
+// When the access token expires, the refresh token creates a new access token.
+// Why secure: Refresh tokens are long-lived and need to be protected against theft. store hash in DB.
 const refreshCookieOptions = {
   ...cookieOptions,
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
 // CSRF cookie for double-submit protection (not httpOnly so client JS can read and send it)
+// If the browser was tricked into making a request, it cannot add the CSRF header, so the attack fails.
+// A CSRF (Cross-Site Request Forgery) attack tricks a user's browser into performing an unwanted action on a trusted website where they are already authenticated.
 const csrfCookieOptions = {
   secure: true,
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
@@ -41,18 +48,16 @@ const csrfCookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
-// OAuth-specific cookie options
+// Protects Google OAuth from CSRF hijacking.
 const oauthCookieOptions = {
   ...cookieOptions,
-  maxAge: 24 * 60 * 60 * 1000,
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
 };
 
 // Short-lived readable cookie options for OAuth state validation (5 minutes).
-// Inherit sameSite/secure behavior from csrfCookieOptions so production
-// environments use SameSite=None + Secure when appropriate.
 const oauthStateCookieOptions = {
   ...csrfCookieOptions,
-  maxAge: 5 * 60 * 1000,
+  maxAge: 5 * 60 * 1000, // 5 minutes
 };
 
 /* Utility helpers to generate and protect tokens
@@ -74,18 +79,35 @@ function generateAccessToken(userId) {
 }
 
 function generateRefreshToken(userId) {
-  // use a dedicated secret for refresh tokens if provided
-  const secret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET;
-  return jwt.sign({ id: userId }, secret, { expiresIn: refreshTokenExpiry });
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: refreshTokenExpiry,
+  });
 }
 
 function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+// Generates a random CSRF token
+// Readable by frontend → included in header → validated on backend.
 function genCsrfToken() {
   return crypto.randomBytes(24).toString("hex");
 }
+
+/**
+Here is how everything works together in real life:
+User logs in (email/password or Google).
+Backend sets:
+-token (access)
+-refreshToken (refresh)
+-csrfToken (CSRF)
+Frontend stores nothing → uses cookies.
+On every request:
+-Browser sends cookies automatically.
+-Frontend adds X-CSRF-Token header.
+If access token expires → backend uses refresh token to issue new one.
+Everything stays secure across domains (SameSite=None; Secure).
+ */
 
 export const signUp = async (req, res) => {
   const { name, email, password } = req.body;
@@ -131,13 +153,13 @@ export const signUp = async (req, res) => {
     const csrf = genCsrfToken();
     res.cookie("csrfToken", csrf, csrfCookieOptions);
 
-    // send welcome email (best-effort)
+    // send welcome email
     try {
       const mailOptions = {
         from: process.env.SENDER_EMAIL,
         to: email,
         subject: "Welcome to OAuth-JWT App",
-        text: `Hello ${name},\n\nThank you for signing up for our OAuth-JWT application! We're excited to have you on board.\n\nBest regards,\nOAuth-JWT Team`,
+        text: `Hello ${name},\n\nThank you for signing up for our OAuth-JWT application! We're excited to have you on board.`,
       };
       await transporter.sendMail(mailOptions);
     } catch (mailErr) {
@@ -159,7 +181,7 @@ export const signUp = async (req, res) => {
  * signIn - authenticate a user by email + password
  *
  * Steps:
- *  1. Validate email and password presence.
+ *  1. Validate email and password.
  *  2. Find user and compare bcrypt password.
  *  3. Issue access & refresh tokens. Store only a hashed refresh token in DB
  *     and send raw tokens to the client as HttpOnly cookies.
@@ -208,15 +230,17 @@ export const signIn = async (req, res) => {
       .json({ message: "Server error in signIn", error: error.message });
   }
 };
-
+// Why clearing cookies is NOT enough?
+//A stolen refresh token remains valid in your database.
+//An attacker can still use it to generate new access tokens.
+//Clearing cookies only stops the browser, not the token itself.
 export const logout = async (req, res) => {
   try {
     // attempt to remove refresh token from DB (if provided in cookie)
     try {
       const refreshToken = req.cookies && req.cookies.refreshToken;
       if (refreshToken) {
-        const secret =
-          process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET;
+        const secret = process.env.JWT_SECRET;
         // verify the refresh token to extract user id
         const decoded = jwt.verify(refreshToken, secret);
         if (decoded && decoded.id) {
@@ -325,7 +349,7 @@ export const refreshTokens = async (req, res) => {
       return res.status(401).json({ message: "No refresh token provided" });
     }
 
-    const secret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET;
+    const secret = process.env.JWT_SECRET;
     let payload;
     try {
       payload = jwt.verify(refreshToken, secret);
@@ -337,7 +361,6 @@ export const refreshTokens = async (req, res) => {
     if (!user)
       return res.status(401).json({ message: "Invalid refresh token" });
 
-    // ensure the refresh token is one we issued and haven't revoked
     // ensure the refresh token is one we issued and haven't revoked
     const incomingHashed = hashToken(refreshToken);
     if (!user.refreshTokens || !user.refreshTokens.includes(incomingHashed)) {
@@ -384,7 +407,7 @@ export const revokeRefreshToken = async (req, res) => {
       return res.status(200).json({ message: "Tokens cleared" });
     }
 
-    const secret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET;
+    const secret = process.env.JWT_SECRET;
     try {
       const payload = jwt.verify(tokenToRevoke, secret);
       const user = await User.findById(payload.id);
