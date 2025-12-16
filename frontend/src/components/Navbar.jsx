@@ -47,18 +47,22 @@ const Navbar = () => {
       </div>
 
       {userData ? (
-        <div className="relative group inline-block">
-          <div className="w-8 h-8 flex justify-center items-center border-2 border-white rounded-full text-white bg-transparent cursor-pointer">
+        <div className="relative inline-block group focus-within:outline-none">
+          <button
+            type="button"
+            className="w-8 h-8 flex justify-center items-center border-2 border-white rounded-full text-white bg-transparent cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/60"
+            aria-haspopup="true"
+          >
             {userData?.name?.[0]?.toUpperCase() ||
               userData?.email?.[0]?.toUpperCase() ||
               "U"}
-          </div>
-          <div className="absolute right-0 top-full mt-0 hidden group-hover:block z-50">
+          </button>
+          <div className="absolute right-0 top-full mt-0 z-50 hidden group-hover:block group-focus-within:block">
             <ul className="list-none m-0 p-2 text-sm bg-white text-[#1b1835] rounded-md shadow-lg min-w-[160px] cursor-pointer">
               {!userData.isVerified && (
                 <li
                   onClick={sendVerificationEmail}
-                  className="block py-2 px-3 cursor-pointer rounded"
+                  className="block py-2 px-3 cursor-pointer rounded hover:bg-gray-100"
                 >
                   Verify Email
                 </li>
@@ -66,7 +70,7 @@ const Navbar = () => {
 
               <li
                 onClick={handleLogout}
-                className="block py-2 px-3 cursor-pointer rounded"
+                className="block py-2 px-3 cursor-pointer rounded hover:bg-gray-100"
               >
                 Logout
               </li>
