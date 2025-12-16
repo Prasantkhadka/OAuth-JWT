@@ -759,6 +759,9 @@ export const googleAuthCallback = async (req, res) => {
     // set cookies (use oauth-specific cookie options for the access token)
     res.cookie("token", accessToken, oauthCookieOptions);
     res.cookie("refreshToken", refreshToken, refreshCookieOptions);
+    // issue CSRF token so OAuth logins can call protected POST endpoints
+    const csrf = genCsrfToken();
+    res.cookie("csrfToken", csrf, csrfCookieOptions);
 
     // clear the oauth_state cookie
     res.clearCookie("oauth_state", oauthStateCookieOptions);
